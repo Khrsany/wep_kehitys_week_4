@@ -1,9 +1,14 @@
-function App() {
-  return (
-    <div>
-      <h1>Hello React</h1>
-    </div>
-  );
-}
+import Home from "./components/Home";
+
+const App = () => {
+  // Tähän ei tule vielä mitään logiikkaa
+};
+
+return (
+  <>
+    <h1>My App</h1>
+    <Home />
+  </>
+);
 
 export default App;
