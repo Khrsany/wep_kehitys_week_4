@@ -5,7 +5,5 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-
-  // ⚠️ VAIHDA tämä omaan Metropolia-tunnukseesi
-  base: "/~username/hooks/",
+  base: "/~alabassa/custom-hooks/",
 });
