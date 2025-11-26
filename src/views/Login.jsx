@@ -1,19 +1,20 @@
 // src/views/Login.jsx
+
 import { useState } from "react";
 import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
 
-export default function Login() {
-  const [showRegister, setShowRegister] = useState(false);
+const Login = () => {
+  const [showLogin, setShowLogin] = useState(true);
 
   return (
-    <div>
-      <div style={{ marginBottom: "1rem" }}>
-        <button onClick={() => setShowRegister(false)}>Show Login</button>
-        <button onClick={() => setShowRegister(true)}>Show Register</button>
-      </div>
+    <>
+      <button onClick={() => setShowLogin(true)}>Show Login</button>
+      <button onClick={() => setShowLogin(false)}>Show Register</button>
 
-      {showRegister ? <RegisterForm /> : <LoginForm />}
-    </div>
+      {showLogin ? <LoginForm /> : <RegisterForm />}
+    </>
   );
-}
+};
+
+export default Login;

@@ -1,11 +1,10 @@
 // src/components/LoginForm.jsx
-import { useNavigate } from "react-router-dom";
-import useForm from "../hooks/formHooks";
-import { useAuthentication } from "../hooks/apiHooks";
 
-export default function LoginForm() {
-  const navigate = useNavigate();
-  const { postLogin } = useAuthentication();
+import useForm from "../hooks/formHooks";
+import { useUserContext } from "../hooks/contextHooks";
+
+const LoginForm = () => {
+  const { handleLogin } = useUserContext();
 
   const initValues = {
     username: "",
@@ -14,20 +13,9 @@ export default function LoginForm() {
 
   const doLogin = async () => {
     try {
-      console.log("Login form values:", inputs);
-      const loginResult = await postLogin(inputs);
-
-      // oletus: loginResult.token sisältää tokenin
-      if (loginResult && loginResult.token) {
-        localStorage.setItem("token", loginResult.token);
-        // siirrytään Homeen
-        navigate("/");
-      } else {
-        console.warn("No token in login result:", loginResult);
-      }
-    } catch (err) {
-      console.error("Login failed:", err);
-      alert("Login failed. Check username/password.");
+      await handleLogin(inputs);
+    } catch (e) {
+      alert(e.message);
     }
   };
 
@@ -46,8 +34,8 @@ export default function LoginForm() {
             name="username"
             type="text"
             id="loginuser"
-            onChange={handleInputChange}
             value={inputs.username}
+            onChange={handleInputChange}
             autoComplete="username"
           />
         </div>
@@ -57,8 +45,8 @@ export default function LoginForm() {
             name="password"
             type="password"
             id="loginpassword"
-            onChange={handleInputChange}
             value={inputs.password}
+            onChange={handleInputChange}
             autoComplete="current-password"
           />
         </div>
@@ -66,4 +54,6 @@ export default function LoginForm() {
       </form>
     </>
   );
-}
+};
+
+export default LoginForm;

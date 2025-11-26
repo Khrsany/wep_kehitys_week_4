@@ -1,16 +1,20 @@
 // src/views/Logout.jsx
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthentication } from "../hooks/apiHooks";
 
-export default function Logout() {
-  const navigate = useNavigate();
-  const { logout } = useAuthentication();
+import { useUserContext } from "../hooks/contextHooks";
 
-  useEffect(() => {
-    logout();
-    navigate("/login");
-  }, [logout, navigate]);
+const Logout = () => {
+  const { handleLogout } = useUserContext();
 
-  return <p>Logging out...</p>;
-}
+  const onClick = () => {
+    handleLogout();
+  };
+
+  return (
+    <>
+      <h1>Logout</h1>
+      <button onClick={onClick}>Logout</button>
+    </>
+  );
+};
+
+export default Logout;
