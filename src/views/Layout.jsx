@@ -7,7 +7,6 @@ import { useUserContext } from "../hooks/contextHooks";
 const Layout = () => {
   const { user, handleAutoLogin } = useUserContext();
 
-  // tarkista token kun appi käynnistyy
   useEffect(() => {
     handleAutoLogin();
   }, [handleAutoLogin]);

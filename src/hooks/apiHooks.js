@@ -1,8 +1,14 @@
 // src/hooks/apiHooks.js
+
 import { useState, useEffect } from "react";
 import fetchData from "../utils/fetchData";
 
-// ---------- MEDIAT (entinen hooki, ei muutosta logiikkaan) ----------
+//
+// ---------------------------------------------------
+//  MEDIA FETCHING (useMedia)
+// ---------------------------------------------------
+//
+
 export default function useMedia() {
   const [mediaArray, setMediaArray] = useState([]);
 
@@ -42,7 +48,12 @@ export default function useMedia() {
   return { mediaArray };
 }
 
-// ---------- AUTHENTICATION (login + logout) ----------
+//
+// ---------------------------------------------------
+//  AUTHENTICATION HOOK (LOGIN + LOGOUT)
+// ---------------------------------------------------
+//
+
 export function useAuthentication() {
   const postLogin = async (inputs) => {
     try {
@@ -74,7 +85,12 @@ export function useAuthentication() {
   return { postLogin, logout };
 }
 
-// ---------- USER (profiili + rekisteröinti) ----------
+//
+// ---------------------------------------------------
+//  USER HOOK (GET USER BY TOKEN + REGISTER)
+// ---------------------------------------------------
+//
+
 export function useUser() {
   const getUserByToken = async (token) => {
     try {
@@ -121,4 +137,67 @@ export function useUser() {
   };
 
   return { getUserByToken, postUser };
+}
+
+//
+// ---------------------------------------------------
+//  FILE UPLOAD HOOK (POST FILE TO UPLOAD SERVER)
+// ---------------------------------------------------
+//
+
+export function useFile() {
+  const postFile = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const fetchOptions = {
+        method: "POST",
+        body: formData,
+      };
+
+      const uploadUrl = import.meta.env.VITE_UPLOAD_SERVER + "/upload";
+
+      const result = await fetchData(uploadUrl, fetchOptions);
+      console.log("File upload result:", result);
+      return result;
+    } catch (e) {
+      console.error("Error in postFile:", e);
+      throw e;
+    }
+  };
+
+  return { postFile };
+}
+
+//
+// ---------------------------------------------------
+//  MEDIA METADATA UPLOAD (POST MEDIA TO MEDIA API)
+// ---------------------------------------------------
+//
+
+export function useMediaUpload() {
+  const postMedia = async (inputs, token) => {
+    try {
+      const fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(inputs),
+      };
+
+      const mediaUrl = import.meta.env.VITE_MEDIA_API + "/media";
+
+      const mediaResult = await fetchData(mediaUrl, fetchOptions);
+      console.log("Media metadata upload result:", mediaResult);
+      return mediaResult;
+    } catch (e) {
+      console.error("Error in postMedia:", e);
+      throw e;
+    }
+  };
+
+  return { postMedia };
 }

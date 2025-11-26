@@ -1,10 +1,10 @@
 // src/views/Home.jsx
 
 import MediaRow from "../components/MediaRow";
-import useMedia from "../hooks/apiHooks";
+import useMedia from "../hooks/apiHooks"; // 👈 Oikea import (default export)
 
 const Home = () => {
-  const { mediaArray } = useMedia();
+  const { mediaArray } = useMedia(); // hook palauttaa mediaArray → noudetaan se tästä
 
   return (
     <>
@@ -26,6 +26,7 @@ const Home = () => {
           {mediaArray.map((item) => (
             <MediaRow key={item.media_id} item={item} />
           ))}
+
           {mediaArray.length === 0 && (
             <tr>
               <td colSpan="8">Loading media...</td>
