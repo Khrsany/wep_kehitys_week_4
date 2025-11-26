@@ -1,6 +1,8 @@
+// src/hooks/apiHooks.js
 import { useState, useEffect } from "react";
 import fetchData from "../utils/fetchData";
 
+// ---------- MEDIAT (entinen hooki, ei muutosta logiikkaan) ----------
 export default function useMedia() {
   const [mediaArray, setMediaArray] = useState([]);
 
@@ -34,9 +36,89 @@ export default function useMedia() {
   }
 
   useEffect(() => {
-    // kutsutaan vain kerran (initial render)
     getMedia();
   }, []);
 
   return { mediaArray };
+}
+
+// ---------- AUTHENTICATION (login + logout) ----------
+export function useAuthentication() {
+  const postLogin = async (inputs) => {
+    try {
+      const fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      };
+
+      const loginResult = await fetchData(
+        import.meta.env.VITE_AUTH_API + "/auth/login",
+        fetchOptions
+      );
+
+      console.log("Login result:", loginResult);
+      return loginResult;
+    } catch (err) {
+      console.error("Error in postLogin:", err);
+      throw err;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+  };
+
+  return { postLogin, logout };
+}
+
+// ---------- USER (profiili + rekisteröinti) ----------
+export function useUser() {
+  const getUserByToken = async (token) => {
+    try {
+      const fetchOptions = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const user = await fetchData(
+        import.meta.env.VITE_AUTH_API + "/users/token",
+        fetchOptions
+      );
+
+      console.log("User by token:", user);
+      return user;
+    } catch (err) {
+      console.error("Error in getUserByToken:", err);
+      throw err;
+    }
+  };
+
+  const postUser = async (inputs) => {
+    try {
+      const fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      };
+
+      const result = await fetchData(
+        import.meta.env.VITE_AUTH_API + "/users",
+        fetchOptions
+      );
+
+      console.log("Register result:", result);
+      return result;
+    } catch (err) {
+      console.error("Error in postUser:", err);
+      throw err;
+    }
+  };
+
+  return { getUserByToken, postUser };
 }
