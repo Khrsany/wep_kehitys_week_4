@@ -1,12 +1,19 @@
 // src/hooks/apiHooks.js
+
 import { useState, useEffect } from "react";
 import fetchData from "../utils/fetchData";
 
-// ---------- MEDIAT (entinen hooki, ei muutosta logiikkaan) ----------
+//
+// ---------------------------------------------------
+//  MEDIA FETCHING (useMedia)
+// ---------------------------------------------------
+//
+
 export default function useMedia() {
   const [mediaArray, setMediaArray] = useState([]);
 
-  async function getMedia() {
+  // Hae kaikki media + niiden käyttäjänimi
+  const getMedia = async () => {
     try {
       const mediaUrl = import.meta.env.VITE_MEDIA_API + "/media";
       const media = await fetchData(mediaUrl);
@@ -33,16 +40,63 @@ export default function useMedia() {
     } catch (error) {
       console.error("Error in getMedia:", error);
     }
-  }
+  };
 
   useEffect(() => {
     getMedia();
   }, []);
 
-  return { mediaArray };
+  // 🔹 Poista media
+  const deleteMedia = async (mediaId, token) => {
+    try {
+      const fetchOptions = {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const url = `${import.meta.env.VITE_MEDIA_API}/media/${mediaId}`;
+      const result = await fetchData(url, fetchOptions);
+      console.log("Delete media result:", result);
+      return result;
+    } catch (err) {
+      console.error("Error in deleteMedia:", err);
+      throw err;
+    }
+  };
+
+  // 🔹 Muokkaa mediaa
+  const modifyMedia = async (mediaId, inputs, token) => {
+    try {
+      const fetchOptions = {
+        method: "PUT", // jos MediaAPI käyttää PATCHia, vaihda tähän "PATCH"
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(inputs),
+      };
+
+      const url = `${import.meta.env.VITE_MEDIA_API}/media/${mediaId}`;
+      const result = await fetchData(url, fetchOptions);
+      console.log("Modify media result:", result);
+      return result;
+    } catch (err) {
+      console.error("Error in modifyMedia:", err);
+      throw err;
+    }
+  };
+
+  return { mediaArray, getMedia, deleteMedia, modifyMedia };
 }
 
-// ---------- AUTHENTICATION (login + logout) ----------
+//
+// ---------------------------------------------------
+//  AUTHENTICATION HOOK (LOGIN + LOGOUT)
+// ---------------------------------------------------
+//
+
 export function useAuthentication() {
   const postLogin = async (inputs) => {
     try {
@@ -74,7 +128,12 @@ export function useAuthentication() {
   return { postLogin, logout };
 }
 
-// ---------- USER (profiili + rekisteröinti) ----------
+//
+// ---------------------------------------------------
+//  USER HOOK (GET USER BY TOKEN + REGISTER)
+// ---------------------------------------------------
+//
+
 export function useUser() {
   const getUserByToken = async (token) => {
     try {
@@ -121,4 +180,133 @@ export function useUser() {
   };
 
   return { getUserByToken, postUser };
+}
+
+//
+// ---------------------------------------------------
+//  FILE UPLOAD HOOK (POST FILE TO UPLOAD SERVER)
+// ---------------------------------------------------
+//
+
+export function useFile() {
+  const postFile = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const fetchOptions = {
+        method: "POST",
+        body: formData,
+      };
+
+      const uploadUrl = import.meta.env.VITE_UPLOAD_SERVER + "/upload";
+
+      const result = await fetchData(uploadUrl, fetchOptions);
+      console.log("File upload result:", result);
+      return result;
+    } catch (e) {
+      console.error("Error in postFile:", e);
+      throw e;
+    }
+  };
+
+  return { postFile };
+}
+
+//
+// ---------------------------------------------------
+//  MEDIA METADATA UPLOAD (POST MEDIA TO MEDIA API)
+// ---------------------------------------------------
+//
+
+export function useMediaUpload() {
+  const postMedia = async (inputs, token) => {
+    try {
+      const fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(inputs),
+      };
+
+      const mediaUrl = import.meta.env.VITE_MEDIA_API + "/media";
+
+      const mediaResult = await fetchData(mediaUrl, fetchOptions);
+      console.log("Media metadata upload result:", mediaResult);
+      return mediaResult;
+    } catch (e) {
+      console.error("Error in postMedia:", e);
+      throw e;
+    }
+  };
+
+  return { postMedia };
+}
+
+//
+// ---------------------------------------------------
+//  LIKES HOOK (useLike)
+//  HUOM: Endpoint-polut oletettu muotoon
+//  GET  /likes/media/:media_id      -> palauttaa taulukon like-objekteja
+//  POST /likes                      -> body { media_id }
+//  DELETE /likes/:like_id
+//  Jos dokumentti poikkeaa tästä, muuta URL:eja sen mukaan.
+// ---------------------------------------------------
+//
+
+export function useLike() {
+  const baseUrl = import.meta.env.VITE_MEDIA_API;
+
+  // hae kaikki liket yhdelle medialle
+  const getLikesByMediaId = async (mediaId) => {
+    const url = `${baseUrl}/likes/media/${mediaId}`;
+    const likes = await fetchData(url);
+    return likes;
+  };
+
+  // lisää tykkäys kirjautuneelle käyttäjälle
+  const postLike = async (mediaId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No auth token found for like");
+    }
+
+    const fetchOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ media_id: mediaId }),
+    };
+
+    const url = `${baseUrl}/likes`;
+    const result = await fetchData(url, fetchOptions);
+    console.log("Post like result:", result);
+    return result;
+  };
+
+  // poista yksi like
+  const deleteLike = async (likeId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No auth token found for like delete");
+    }
+
+    const fetchOptions = {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const url = `${baseUrl}/likes/${likeId}`;
+    const result = await fetchData(url, fetchOptions);
+    console.log("Delete like result:", result);
+    return result;
+  };
+
+  return { getLikesByMediaId, postLike, deleteLike };
 }

@@ -1,75 +1,82 @@
 // src/contexts/UserContext.jsx
 
-import { createContext, useState } from "react";
-import { useAuthentication, useUser } from "../hooks/apiHooks";
-import { useNavigate } from "react-router-dom";
+import { createContext, useCallback, useState } from "react";
 
-const UserContext = createContext(null);
+const baseUrl = import.meta.env.VITE_MEDIA_API;
 
-const UserProvider = ({ children }) => {
+export const UserContext = createContext(null);
+
+export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const { postLogin } = useAuthentication();
-  const { getUserByToken } = useUser();
-  const navigate = useNavigate();
+  // LOGIN
+  const login = async (credentials) => {
+    const resp = await fetch(`${baseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    });
 
-  // 🔐 LOGIN
-  const handleLogin = async (credentials) => {
-    try {
-      const loginResult = await postLogin(credentials);
-
-      const token = loginResult.token;
-      localStorage.setItem("token", token);
-
-      const userResult = await getUserByToken(token);
-      setUser(userResult.user);
-
-      navigate("/");
-    } catch (e) {
-      console.log(e.message);
-      throw e;
+    if (!resp.ok) {
+      throw new Error("Login epäonnistui");
     }
+
+    const data = await resp.json();
+    localStorage.setItem("user", JSON.stringify(data));
+    setUser(data);
+    return data;
   };
 
-  // 🚪 LOGOUT
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem("token");
-      setUser(null);
-      navigate("/");
-    } catch (e) {
-      console.log(e.message);
+  // REGISTER
+  const register = async (inputs) => {
+    const resp = await fetch(`${baseUrl}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(inputs),
+    });
+
+    if (!resp.ok) {
+      throw new Error("Rekisteröinti epäonnistui");
     }
+
+    const data = await resp.json();
+    return data;
   };
 
-  // ♻️ AUTOLOGIN – vain käyttäjän nouto, EI navigointia
-  const handleAutoLogin = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        return;
-      }
-
-      const userResult = await getUserByToken(token);
-      setUser(userResult.user);
-    } catch (e) {
-      console.log(e.message);
-    }
+  const logout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
   };
 
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        setUser,
-        handleLogin,
-        handleLogout,
-        handleAutoLogin,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
-  );
+  // AUTOLOGIN
+  const handleAutoLogin = useCallback(() => {
+    const stored = localStorage.getItem("user");
+    if (!stored) return;
+
+    try {
+      const storedUser = JSON.parse(stored);
+      setUser(storedUser);
+    } catch (e) {
+      console.error(e);
+      localStorage.removeItem("user");
+    }
+  }, []);
+
+  const value = {
+    user,
+    setUser,
+    handleAutoLogin,
+    login,
+    handleLogin: login,
+    logout,
+    handleLogout: logout,
+    register,
+    handleRegister: register,
+  };
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
-
-export { UserContext, UserProvider };

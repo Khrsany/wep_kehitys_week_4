@@ -38,3 +38,7 @@ https://users.metropolia.fi/~alabassa/forms
 ## Context / Shared State
 
 Open [Context App](https://users.metropolia.fi/~alabassa/context) to view it in the browser.
+
+## Tailwind version
+
+Open [Tailwind version](https://users.metropolia.fi/~alabassa/context) to view it in the browser.
